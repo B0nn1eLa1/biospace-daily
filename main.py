@@ -43,7 +43,11 @@ HTTP_HEADERS = {
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 GMAIL_USER = os.environ["GMAIL_USER"]
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
-RECIPIENT = os.environ["RECIPIENT_EMAIL"]
+BCC_RECIPIENTS = [
+    e.strip()
+    for e in os.environ["RECIPIENT_EMAIL"].split(",")
+    if e.strip()
+]
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -340,10 +344,10 @@ def send_email(subject: str, html_body: str, smtp_server):
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = formataddr(("Biospace 每日新聞", GMAIL_USER))
-    msg["To"] = RECIPIENT
+    msg["To"] = GMAIL_USER                # 寄給機器人自己
+    # Bcc 不寫入 header，但實際投遞到所有人
     msg.attach(MIMEText(html_body, "html", "utf-8"))
-    smtp_server.send_message(msg)
-
+    smtp_server.send_message(msg, to_addrs=BCC_RECIPIENTS)
 
 # ---------- 主流程 ----------
 def main():
@@ -396,7 +400,7 @@ def main():
             send_email(subject, html, smtp)
             print(f"   ✅ Sent #{i}/{total}: {item['data']['title_zh'][:50]}")
 
-    print(f"\n🎉 All done! {total} emails sent to {RECIPIENT}")
+    print(f"\n🎉 All done! {total} emails sent (BCC to {len(BCC_RECIPIENTS)} recipient(s))")
 
 
 if __name__ == "__main__":
