@@ -1,0 +1,4 @@
+google-genai>=0.3.0
+feedparser>=6.0.10
+requests>=2.31.0
+beautifulsoup4>=4.12.0
